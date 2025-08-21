@@ -1,0 +1,92 @@
+#set text(font: "Latin Modern Roman", lang: "pt")
+#set page(
+  numbering: "1 / 1",
+  footer: [
+    #h(1fr) #text(9pt, counter(page).display()) #h(1fr)
+  ],
+)
+
+#align(center)[
+  #text(16pt, strong("Relatório do Projeto: Simulador de Tráfego Aéreo"))
+  #v(1em)
+  #text(12pt, "Simulação de um sistema de controle de tráfego aéreo com PThreads")
+  #v(2em)
+]
+
+#align(center)[
+  #text(10pt, "Proponentes:")
+  #text(10pt, "Guilherme Dalmas Ganassini")
+  #text(10pt, "Gustavo Domenech de Souza")
+]
+
+#pagebreak()
+= Introdução
+Este projeto consiste em um simulador de tráfego aéreo desenvolvido em C, utilizando a biblioteca PThreads para gerenciar a concorrência. O objetivo principal é modelar o funcionamento de um aeroporto internacional com alta demanda, onde aviões (representados por threads) competem por recursos limitados, como pistas, portões e a torre de controle. A simulação explora e demonstra os desafios de concorrência, como deadlocks e starvation, que surgem da interação entre voos domésticos e internacionais, cada um com suas próprias regras de alocação de recursos.
+
+A solução implementada permite a configuração de parâmetros cruciais, como a porcentagem de voos internacionais, a quantidade de recursos disponíveis e a duração da simulação. Ao final, um relatório detalhado é gerado, apresentando métricas de sucesso, falhas e ocorrências de problemas de concorrência.
+
+= Desenvolvimento da Solução
+A simulação é construída em torno de um modelo de alocação de recursos que expõe a possibilidade de deadlocks e starvation. Os recursos do aeroporto — pistas de pouso (`tracks`), portões (`gates`) e a torre de controle (`tower`) — são gerenciados por semáforos, garantindo o acesso exclusivo ou limitado a eles.
+
+* #text(10pt, strong("Recursos e Sincronização"))
+    A torre de controle, que pode gerenciar até duas operações simultaneamente, e os recursos de pistas e portões são modelados por semáforos, inicializados com a capacidade máxima configurada em `config.h`.
+* #text(10pt, strong("Modelo de Avião (Thread)"))
+    Cada avião é uma thread que passa por um ciclo de vida: pouso, desembarque e decolagem. As threads solicitam e liberam recursos em uma ordem específica que difere entre voos domésticos e internacionais, sendo a principal causa de deadlocks.
+    * #text(10pt, strong("Prioridade de Voos Internacionais"))
+        Voos internacionais têm prioridade sobre os domésticos. Para implementar isso, um contador de voos internacionais aguardando (`waiting_international_flights`) é utilizado. Voos domésticos só podem prosseguir com suas operações se este contador for zero, evitando que voos internacionais sejam impedidos de acessar a torre de controle.
+* #text(10pt, strong("Detecção de Problemas"))
+    * #text(10pt, strong("Starvation"))
+        Para detectar a inanição, o tempo de espera de cada avião é monitorado. Se um avião doméstico espera por mais de 60 segundos, ele entra em um "estado crítico". Se a espera excede 90 segundos, a thread do avião é terminada, simulando um "crash por starvation".
+    * #text(10pt, strong("Deadlock"))
+        Um mecanismo simplificado de detecção de deadlock foi implementado. Se um avião tenta adquirir um recurso e o tempo de espera já superou 30 segundos, o sistema assume um potencial deadlock e encerra a operação do avião com falha.
+* #text(10pt, strong("Geração de Voos"))
+    Uma thread geradora de aviões (`spawn_planes`) é responsável por criar novas threads de aviões em intervalos aleatórios. A proporção de voos internacionais é definida pelo aeroporto selecionado em `config.h`, como "São Paulo-Guarulhos (35% internacional)".
+* #text(10pt, strong("Relatório Final"))
+    Ao término da simulação, a função `print_final_report` consolida todas as estatísticas, incluindo o número de voos bem-sucedidos, falhas por starvation e deadlock, e a taxa de sucesso geral.
+
+= Passos para Compilar e Executar
+Para compilar e executar o simulador, siga os passos abaixo no terminal:
+
+1.  #text(10pt, strong("Compilação:"))
+    Certifique-se de que o GCC e as bibliotecas PThreads estão instalados. Utilize o comando de compilação abaixo:
+    #v(0.5em)
+    `gcc margolis.c -o margolis -pthread -Wall`
+    #v(0.5em)
+    * `gcc margolis.c`: Compila o arquivo `margolis.c`.
+    * `-o margolis`: Define o nome do executável como `margolis`.
+    * `-pthread`: Linka a biblioteca PThreads.
+    * `-Wall`: Habilita todos os avisos de compilação.
+2.  #text(10pt, strong("Execução:"))
+    Após a compilação bem-sucedida, execute o programa com:
+    #v(0.5em)
+    `./margolis`
+    #v(0.5em)
+3.  #text(10pt, strong("Parada da Simulação:"))
+    A simulação é configurada para rodar por um tempo fixo (por padrão, 300 segundos, ou 5 minutos). Você também pode interromper a simulação a qualquer momento pressionando `Ctrl+C`. O programa irá capturar o sinal, parar de criar novos aviões e aguardar as threads existentes terminarem suas operações antes de gerar o relatório final.
+    #v(0.5em)
+    
+
+#pagebreak()
+= Dificuldades Encontradas
+As principais dificuldades encontradas durante o desenvolvimento foram:
+
+* #text(10pt, strong("Gerenciamento de Recursos"))
+    O maior desafio foi garantir que os semáforos e mutexes fossem utilizados corretamente para evitar race conditions e deadlocks. A ordem de aquisição e liberação de recursos é crítica e teve que ser meticulosamente planejada para voos domésticos e internacionais.
+* #text(10pt, strong("Implementação de Prioridade"))
+    A prioridade de voos internacionais sobre os domésticos complicou a lógica de alocação da torre de controle. A solução de monitorar o contador de voos internacionais em espera e usar um mutex para protegê-lo resolveu o problema, mas exigiu um cuidado extra para evitar que a própria lógica de prioridade causasse uma inanição dos voos domésticos.
+* #text(10pt, strong("Detecção e Tratamento de Deadlock e Starvation"))
+    A detecção de deadlocks é complexa. A abordagem simplificada de tempo limite (30 segundos) foi uma solução prática, mas não é um algoritmo de detecção de deadlock ideal. O monitoramento do tempo de espera para detecção de starvation também precisou de uma implementação cuidadosa para garantir que as threads não fossem encerradas prematuramente.
+
+= Conclusão e Sugestões de Trabalhos Futuros
+O simulador de tráfego aéreo demonstrou com sucesso os desafios de concorrência em um sistema real. A aplicação de semáforos e mutexes foi fundamental para gerenciar o acesso a recursos compartilhados e ilustrar as consequências de escolhas de design de alocação de recursos, como a diferença nas ordens de solicitação entre voos domésticos e internacionais.
+
+Para trabalhos futuros, as seguintes melhorias podem ser exploradas:
+
+* #text(10pt, strong("Algoritmos de Detecção de Deadlock"))
+    Substituir a abordagem de tempo limite por um algoritmo mais sofisticado de detecção de deadlock, como o Algoritmo do Banquero ou de Grafos de Alocação de Recursos, para identificar e possivelmente recuperar de deadlocks de forma mais precisa.
+* #text(10pt, strong("Modelo de Starvation mais Dinâmico"))
+    Implementar um sistema de envelhecimento (aging) para voos domésticos, onde a prioridade aumenta com o tempo de espera. Isso permitiria que voos domésticos eventualmente "saltassem" na frente de voos internacionais, evitando a inanição completa sem a necessidade de um "crash".
+* #text(10pt, strong("Interface Gráfica"))
+    Desenvolver uma interface gráfica (GUI) para visualizar o movimento dos aviões, a ocupação dos recursos e o estado de cada thread em tempo real, tornando a simulação mais intuitiva e didática.
+* #text(10pt, strong("Configuração de Aeroportos por Arquivo Externo"))
+    Permitir que os dados dos aeroportos (taxas de voos, número de pistas e portões) sejam lidos de um arquivo de configuração externo (por exemplo, JSON ou XML), tornando a simulação ainda mais flexível e fácil de usar para experimentos.
