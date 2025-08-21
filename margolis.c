@@ -609,8 +609,7 @@ spawn_planes(void* arg)
         pthread_mutex_lock(&mutex_statistics);
         statistics.total_managed_planes++;
         pthread_mutex_unlock(&mutex_statistics);
-        
-        // 
+         
         print_log(plane_counter, "CRIADO", 
                     (planes[plane_counter].type == INTERNATIONAL) ? 
                     "Voo internacional criado" : "Voo doméstico criado");

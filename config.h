@@ -21,19 +21,19 @@
  *   - SAO_PAULO_GUARULHOS              35% international,     1.3M international / 3.7M total
  *
  */
-static const AirportParameters AIRPORT = AIRPORTS[SAO_PAULO_GUARULHOS];
+static const AirportParameters AIRPORT = AIRPORTS[DUBAI_INTERNATIONAL];
 /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
  *
  * 2) choose basic simulation airport parameters
  * 
  */
-static const int SIM_DURATION               = 300;  // seconds
+static const int SIM_DURATION               = 60;   // seconds
 static const int N_TRACKS                   = 3;    // number of tracks
 static const int N_GATES                    = 5;    // number of gates
-static const int N_TOWER_MAX_OPERATIONS       = 2;    // max number of simultaneous operations the tower can do
-static const int MAX_N_PLANES               = 1;    // maximum number of planes #TODO
+static const int N_TOWER_MAX_OPERATIONS     = 2;    // max number of simultaneous operations the tower can do
+static const int MAX_N_PLANES               = 200;  // maximum number of planes #TODO
 static const int TIME_TILL_CRITICAL_STATE   = 60;   // time till critical state in seconds
 static const int TIME_TILL_CRASH            = 90;   // time till crash in seconds
-static const int WAITING_TIMEOUT            = 60;//
+static const int WAITING_TIMEOUT            = 60;   // waiting timeout
 /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
 #endif /* CONFIG_H */
